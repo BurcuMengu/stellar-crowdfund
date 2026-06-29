@@ -13,8 +13,9 @@ NETWORK="${NETWORK:-testnet}"
 IDENTITY="${IDENTITY:-crowdfund}"
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
-# shellcheck disable=SC1091
-source "$ROOT/frontend/.env.local"
+# Read values without executing the file (the network passphrase contains ';').
+ENV_FILE="$ROOT/frontend/.env.local"
+VITE_USDC_ID="$(grep '^VITE_USDC_ID=' "$ENV_FILE" | cut -d= -f2-)"
 
 # USDC uses 7 decimals (stroops). Convert the human amount.
 STROOPS=$(( AMOUNT * 10000000 ))

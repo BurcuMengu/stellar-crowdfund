@@ -45,13 +45,28 @@ CAMPAIGN_WASM_HASH="$(stellar contract upload \
 log "Campaign WASM hash: $CAMPAIGN_WASM_HASH"
 
 # 4. Deploy factory ---------------------------------------------------------
-log "Deploying factory"
-FACTORY_ID="$(stellar contract deploy \
+# Upload first, then deploy by hash. Testnet is eventually consistent, so the
+# freshly uploaded WASM may not be visible to the deploy simulation yet — retry.
+log "Uploading factory WASM"
+FACTORY_WASM_HASH="$(stellar contract upload \
   --wasm "$WASM_DIR/factory.wasm" \
-  --source "$IDENTITY" --network "$NETWORK" \
-  -- \
-  --admin "$DEPLOYER" \
-  --campaign_wasm_hash "$CAMPAIGN_WASM_HASH")"
+  --source "$IDENTITY" --network "$NETWORK")"
+
+log "Deploying factory"
+FACTORY_ID=""
+for attempt in 1 2 3 4 5; do
+  if FACTORY_ID="$(stellar contract deploy \
+    --wasm-hash "$FACTORY_WASM_HASH" \
+    --source "$IDENTITY" --network "$NETWORK" \
+    -- \
+    --admin "$DEPLOYER" \
+    --campaign_wasm_hash "$CAMPAIGN_WASM_HASH" 2>/dev/null)"; then
+    break
+  fi
+  log "  deploy not ready yet (attempt $attempt), retrying in 5s…"
+  sleep 5
+done
+[ -n "$FACTORY_ID" ] || { echo "Factory deploy failed after retries"; exit 1; }
 log "Factory: $FACTORY_ID"
 
 # 5. Test USDC token (SAC) --------------------------------------------------
