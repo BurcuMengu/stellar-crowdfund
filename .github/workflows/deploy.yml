@@ -1,0 +1,53 @@
+name: Deploy
+
+# Manual, approval-gated deploy to a Stellar network.
+on:
+  workflow_dispatch:
+    inputs:
+      network:
+        description: "Target network"
+        type: choice
+        options: [testnet]
+        default: testnet
+
+jobs:
+  deploy:
+    name: Deploy contracts
+    runs-on: ubuntu-latest
+    # Requires a GitHub Environment named "testnet" with the secret
+    # DEPLOYER_SECRET_KEY (an S... Stellar secret key for a funded account).
+    environment: ${{ inputs.network }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32v1-none
+
+      - name: Cache cargo
+        uses: Swatinem/rust-cache@v2
+
+      - name: Install Stellar CLI
+        uses: cargo-bins/cargo-binstall@main
+      - run: cargo binstall -y stellar-cli
+
+      - name: Configure deployer key
+        env:
+          DEPLOYER_SECRET_KEY: ${{ secrets.DEPLOYER_SECRET_KEY }}
+        run: |
+          echo "$DEPLOYER_SECRET_KEY" | stellar keys add crowdfund --secret-key
+          stellar network use ${{ inputs.network }} || true
+
+      - name: Deploy
+        env:
+          NETWORK: ${{ inputs.network }}
+          IDENTITY: crowdfund
+        run: ./scripts/deploy.sh
+
+      - name: Upload frontend env
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-env-${{ inputs.network }}
+          path: frontend/.env.local
+          if-no-files-found: error
