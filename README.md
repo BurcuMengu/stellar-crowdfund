@@ -8,6 +8,10 @@ funds **milestone by milestone**. If not, every backer can **refund** their exac
 contribution. Each campaign is its own contract instance — deployed by a
 **factory** — so one campaign's escrow can never touch another's.
 
+**[Live demo](https://burcumengu.github.io/stellar-crowdfund/)** · recorded walkthrough:
+
+![Demo](docs/demo.gif)
+
 ```
 React + Vite + Wallets Kit
         │ stellar-sdk (simulate + invoke)

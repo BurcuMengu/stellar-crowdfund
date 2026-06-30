@@ -9,7 +9,9 @@ Soroban, with a React frontend, full test suite, and CI/CD.
 |---|---|
 | **GitHub repository** | https://github.com/BurcuMengu/stellar-crowdfund |
 | **Live demo** | https://burcumengu.github.io/stellar-crowdfund/ |
-| **Demo video (1–2 min)** | _TODO: paste your YouTube/Loom link here_ |
+| **Demo (recorded walkthrough)** | [`docs/demo.gif`](docs/demo.gif) — connect wallet → contribute → live progress + event feed |
+
+![Demo](docs/demo.gif)
 
 ## On-chain (Testnet)
 
@@ -65,7 +67,8 @@ Place images under `docs/screenshots/` and they will render below.
 - [x] Contract deployment address
 - [x] Transaction hash for contract interaction
 - [x] Screenshots (mobile UI, CI/CD, tests) — in `docs/screenshots/`
-- [ ] Demo video link (1–2 min) — add above
+- [x] Demo video — recorded walkthrough at [`docs/demo.gif`](docs/demo.gif)
+      (a real wallet contribution; upload to Loom/YouTube too if a hosted video link is required)
 
 ## How to run locally
 
