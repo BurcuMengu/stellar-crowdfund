@@ -2,18 +2,19 @@ import { fromStroops, shortAddress } from "../lib/format";
 import type { ContractEvent } from "../types";
 
 export function eventText(e: ContractEvent): string {
-  const { topics, value } = e.data as { topics: any[]; value: any };
+  // `#[contractevent]` emits the data section as a MAP, so `value` is an object
+  // keyed by the struct's non-topic field names (e.g. { amount, total_raised }).
+  const { topics, value } = e.data as { topics: any[]; value: Record<string, any> };
+  const v = value ?? {};
   switch (e.type) {
-    case "contrib": {
-      const [amount] = Array.isArray(value) ? value : [value];
-      return `${shortAddress(String(topics[0]))} contributed ${fromStroops(BigInt(amount))} USDC`;
-    }
+    case "contrib":
+      return `${shortAddress(String(topics[0]))} contributed ${fromStroops(BigInt(v.amount))} USDC`;
     case "release":
-      return `Milestone ${Number(topics[0]) + 1} released (${fromStroops(BigInt(value))} USDC)`;
+      return `Milestone ${Number(topics[0]) + 1} released (${fromStroops(BigInt(v.amount))} USDC)`;
     case "approve":
       return `Milestone ${Number(topics[0]) + 1} approved`;
     case "refund":
-      return `${shortAddress(String(topics[0]))} refunded ${fromStroops(BigInt(value))} USDC`;
+      return `${shortAddress(String(topics[0]))} refunded ${fromStroops(BigInt(v.amount))} USDC`;
     case "created":
       return `Campaign #${Number(topics[0])} created`;
     default:

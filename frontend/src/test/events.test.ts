@@ -9,13 +9,18 @@ const mk = (type: ContractEvent["type"], topics: any[], value: any): ContractEve
   data: { topics, value },
 });
 
+// `#[contractevent]` emits data as a MAP, so the decoded `value` is an object
+// keyed by the struct's non-topic field names — these mocks mirror that shape.
 describe("eventText", () => {
   it("describes a contribution", () => {
-    const e = mk("contrib", ["GABCDEFGHIJKLMNOP"], [50_0000000n, 50_0000000n]);
+    const e = mk("contrib", ["GABCDEFGHIJKLMNOP"], {
+      amount: 50_0000000n,
+      total_raised: 50_0000000n,
+    });
     expect(eventText(e)).toContain("contributed 50 USDC");
   });
   it("describes a milestone release with 1-based index", () => {
-    expect(eventText(mk("release", [0], 600_0000000n))).toBe(
+    expect(eventText(mk("release", [0], { amount: 600_0000000n }))).toBe(
       "Milestone 1 released (600 USDC)",
     );
   });
@@ -23,7 +28,7 @@ describe("eventText", () => {
     expect(eventText(mk("approve", [1], {}))).toBe("Milestone 2 approved");
   });
   it("describes a refund", () => {
-    const e = mk("refund", ["GZZZZZZZZZZZZZZZZ"], 25_0000000n);
+    const e = mk("refund", ["GZZZZZZZZZZZZZZZZ"], { amount: 25_0000000n });
     expect(eventText(e)).toContain("refunded 25 USDC");
   });
 });
