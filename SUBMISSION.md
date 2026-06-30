@@ -64,7 +64,7 @@ Place images under `docs/screenshots/` and they will render below.
 - [x] Live demo link (GitHub Pages)
 - [x] Contract deployment address
 - [x] Transaction hash for contract interaction
-- [ ] Screenshots (mobile UI, CI/CD, tests) — add under `docs/screenshots/`
+- [x] Screenshots (mobile UI, CI/CD, tests) — in `docs/screenshots/`
 - [ ] Demo video link (1–2 min) — add above
 
 ## How to run locally
