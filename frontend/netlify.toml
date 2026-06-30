@@ -1,0 +1,10 @@
+# Netlify config (alternative to GitHub Pages). Deploy from the frontend/ dir.
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+# SPA fallback so client-side routes (/campaign/:address) resolve.
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

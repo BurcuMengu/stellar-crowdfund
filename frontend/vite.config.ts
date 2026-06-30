@@ -4,6 +4,8 @@ import react from "@vitejs/plugin-react";
 import { nodePolyfills } from "vite-plugin-node-polyfills";
 
 export default defineConfig({
+  // GitHub Pages serves from /<repo>/; Netlify/Vercel serve from root.
+  base: process.env.GITHUB_PAGES ? "/stellar-crowdfund/" : "/",
   plugins: [
     react(),
     // @stellar/stellar-sdk and Stellar Wallets Kit (via @near-js/randombytes)
