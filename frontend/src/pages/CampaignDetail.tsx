@@ -13,6 +13,8 @@ import {
   releaseMilestone,
 } from "../lib/contracts";
 import { decodeError } from "../lib/stellar";
+import { addUsdcTrustline } from "../lib/trustline";
+import { config } from "../config";
 import { formatCountdown, fromStroops, shortAddress, toStroops } from "../lib/format";
 import { useCampaign } from "../hooks/useCampaign";
 import { useEvents } from "../hooks/useEvents";
@@ -23,7 +25,7 @@ export function CampaignDetail() {
   const { address } = useParams<{ address: string }>();
   const { info, loading, error, reload } = useCampaign(address);
   const events = useEvents(address ? [address] : []);
-  const { signer, address: wallet, refreshBalance } = useWallet();
+  const { signer, address: wallet, balance, refreshBalance } = useWallet();
   const { push } = useToast();
 
   const [amount, setAmount] = useState("");
@@ -44,6 +46,20 @@ export function CampaignDetail() {
   const afterAction = async () => {
     await reload();
     await refreshBalance();
+  };
+
+  const onAddTrustline = async () => {
+    if (!signer) return push("Connect your wallet first.", "error");
+    setBusy("trustline");
+    try {
+      await addUsdcTrustline(signer);
+      push("USDC trustline added. Now get some test USDC to contribute.", "success");
+      await refreshBalance();
+    } catch (e) {
+      push(decodeError((e as Error).message), "error");
+    } finally {
+      setBusy(null);
+    }
   };
 
   const onContribute = async () => {
@@ -146,12 +162,34 @@ export function CampaignDetail() {
           </p>
         )}
 
+        {/* Needs USDC helper */}
+        {canContribute && wallet && (balance === null || balance === 0n) && (
+          <div className="mt-5 rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm text-amber-800">
+            <p className="font-semibold">You need test USDC to contribute.</p>
+            <p className="mt-1">
+              1) Add the USDC trustline, then 2) get test USDC from the issuer
+              (<code>{shortAddress(config.usdcIssuer)}</code>) — e.g.{" "}
+              <code>./scripts/mint.sh {shortAddress(wallet)} 1000</code>.
+            </p>
+            <button
+              onClick={onAddTrustline}
+              disabled={busy === "trustline"}
+              className="mt-3 flex items-center gap-2 rounded-lg bg-amber-600 px-4 py-1.5 font-semibold text-white hover:bg-amber-700 disabled:opacity-60"
+            >
+              {busy === "trustline" && <Spinner className="h-4 w-4" />}
+              Add USDC trustline
+            </button>
+          </div>
+        )}
+
         {/* Contribute */}
         {canContribute && (
           <div className="mt-5 flex flex-col gap-2 sm:flex-row">
             <input
               type="text"
               inputMode="decimal"
+              id="contribute-amount"
+              name="amount"
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
               placeholder="Amount (USDC)"

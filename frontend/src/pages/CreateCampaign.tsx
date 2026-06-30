@@ -80,6 +80,8 @@ export function CreateCampaign() {
           <input
             type="text"
             inputMode="decimal"
+            id="goal"
+            name="goal"
             value={goal}
             onChange={(e) => setGoal(e.target.value)}
             placeholder="1000"
@@ -91,6 +93,8 @@ export function CreateCampaign() {
           <span className="text-sm font-medium">Deadline</span>
           <input
             type="datetime-local"
+            id="deadline"
+            name="deadline"
             value={deadline}
             onChange={(e) => setDeadline(e.target.value)}
             className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-brand focus:outline-none"
@@ -108,6 +112,8 @@ export function CreateCampaign() {
                 <input
                   type="text"
                   inputMode="decimal"
+                  id={`milestone-${i}`}
+                  name={`milestone-${i}`}
                   value={m}
                   onChange={(e) => setMilestone(i, e.target.value)}
                   placeholder={`Milestone ${i + 1} amount`}

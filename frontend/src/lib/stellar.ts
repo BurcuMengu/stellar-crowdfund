@@ -134,7 +134,10 @@ export async function invokeContract<T = unknown>(opts: {
 
 // ---- helpers ---------------------------------------------------------------
 
-const CONTRACT_ERRORS: Record<number, string> = {
+// Campaign contract error codes. NOTE: the USDC SAC reuses some of the same
+// numeric codes (e.g. #13 = trustline missing, #10 = insufficient balance), so
+// token-transfer failures MUST be detected by text first — see decodeError.
+const CAMPAIGN_ERRORS: Record<number, string> = {
   4: "The deadline has passed — contributions are closed.",
   5: "Amount must be greater than zero.",
   6: "The funding goal was not met.",
@@ -148,12 +151,27 @@ const CONTRACT_ERRORS: Record<number, string> = {
 /** Turn a raw contract/simulation error into a friendly message when possible. */
 export function decodeError(raw: unknown): string {
   const text = typeof raw === "string" ? raw : JSON.stringify(raw ?? "");
-  const match = text.match(/Error\(Contract,\s*#(\d+)\)/);
-  if (match) {
-    const code = Number(match[1]);
-    return CONTRACT_ERRORS[code] ?? `Contract error #${code}`;
+
+  // Token (USDC SAC) failures surface as a nested `transfer` call error. Detect
+  // these by their text before falling back to the campaign error-code map,
+  // because the numeric codes overlap with campaign codes.
+  if (/trustline.*missing|missing.*trustline/i.test(text)) {
+    return "You don't have a USDC trustline yet. Add USDC in your wallet (and get test USDC) before contributing.";
   }
-  return text || "Unknown error";
+  if (/balance is not sufficient|insufficient|not enough/i.test(text)) {
+    return "Not enough USDC balance for this contribution.";
+  }
+  const tokenTransferFailed = /call failed",?\s*transfer/i.test(text);
+
+  const match = text.match(/Error\(Contract,\s*#(\d+)\)/);
+  if (match && !tokenTransferFailed) {
+    const code = Number(match[1]);
+    return CAMPAIGN_ERRORS[code] ?? `Contract error #${code}`;
+  }
+  if (tokenTransferFailed) {
+    return "USDC transfer failed — check your trustline and balance.";
+  }
+  return text.length > 180 ? text.slice(0, 180) + "…" : text || "Unknown error";
 }
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
