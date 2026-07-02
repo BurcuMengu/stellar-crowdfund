@@ -17,8 +17,8 @@ export const kit = new StellarWalletsKit({
   modules: allowAllModules(),
 });
 
-/** Open the multi-wallet picker and return the connected address. */
-export async function connect(): Promise<string> {
+/** Open the multi-wallet picker and return the connected address + wallet id. */
+export async function connect(): Promise<{ address: string; walletId: string }> {
   return new Promise((resolve, reject) => {
     kit
       .openModal({
@@ -26,7 +26,7 @@ export async function connect(): Promise<string> {
           try {
             kit.setWallet(option.id);
             const { address } = await kit.getAddress();
-            resolve(address);
+            resolve({ address, walletId: option.id });
           } catch (e) {
             reject(e);
           }
@@ -35,6 +35,11 @@ export async function connect(): Promise<string> {
       })
       .catch(reject);
   });
+}
+
+/** Re-select a previously connected wallet module by its id (used on restore). */
+export function selectWallet(walletId: string): void {
+  kit.setWallet(walletId);
 }
 
 export async function disconnect(): Promise<void> {

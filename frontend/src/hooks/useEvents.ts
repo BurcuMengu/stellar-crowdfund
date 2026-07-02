@@ -12,6 +12,10 @@ export function useEvents(contractIds: string[]): ContractEvent[] {
   const key = contractIds.join(",");
 
   useEffect(() => {
+    // Reset accumulated events + cursor when the watched contracts change, so
+    // navigating between campaigns doesn't show a previous campaign's activity.
+    setEvents([]);
+    cursor.current = undefined;
     if (!key) return;
     const ids = key.split(",");
     let active = true;

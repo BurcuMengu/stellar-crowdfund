@@ -68,10 +68,10 @@ pub enum Error {
     DeadlineNotPassed = 7,
     NotFailed = 8,
     NothingToRefund = 9,
-    Unauthorized = 10,
     MilestoneNotApproved = 11,
     MilestoneAlreadyReleased = 12,
     OutOfOrder = 13,
     MilestoneNotFound = 14,
     AlreadyApproved = 15,
+    ExceedsGoal = 16,
 }

@@ -138,14 +138,21 @@ export async function invokeContract<T = unknown>(opts: {
 // numeric codes (e.g. #13 = trustline missing, #10 = insufficient balance), so
 // token-transfer failures MUST be detected by text first — see decodeError.
 const CAMPAIGN_ERRORS: Record<number, string> = {
+  1: "This campaign is already initialized.",
+  2: "Invalid milestones — amounts must be positive and sum to the goal.",
+  3: "Invalid deadline — it must be in the future.",
   4: "The deadline has passed — contributions are closed.",
   5: "Amount must be greater than zero.",
   6: "The funding goal was not met.",
+  7: "The deadline has not passed yet.",
   8: "Refunds are only available for failed campaigns.",
   9: "You have nothing to refund.",
   11: "This milestone has not been approved yet.",
   12: "This milestone was already released.",
   13: "Milestones must be handled in order.",
+  14: "That milestone does not exist.",
+  15: "This milestone was already approved.",
+  16: "That would exceed the funding goal — contribute at most the remaining amount.",
 };
 
 /** Turn a raw contract/simulation error into a friendly message when possible. */

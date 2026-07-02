@@ -90,11 +90,19 @@ impl Campaign {
             return Err(Error::DeadlinePassed);
         }
 
+        // Milestones sum to exactly `goal` and only milestone amounts are ever
+        // released, so any surplus above `goal` would be trapped forever. Reject
+        // contributions that would push total past the goal — the final funder
+        // must send at most the remaining gap (`goal - total_raised`).
+        let total = Self::total_raised(&env) + amount;
+        if total > Self::goal(&env) {
+            return Err(Error::ExceedsGoal);
+        }
+
         let token = Self::token(&env);
         let this = env.current_contract_address();
         token::TokenClient::new(&env, &token).transfer(&from, &this, &amount);
 
-        let total = Self::total_raised(&env) + amount;
         env.storage().instance().set(&DataKey::TotalRaised, &total);
 
         let key = DataKey::Contribution(from.clone());

@@ -22,6 +22,7 @@ interface WalletApi {
 
 const WalletContext = createContext<WalletApi | null>(null);
 const STORAGE_KEY = "crowdfund.address";
+const WALLET_ID_KEY = "crowdfund.walletId";
 
 export function WalletProvider({ children }: { children: ReactNode }) {
   const [address, setAddress] = useState<string | null>(null);
@@ -36,9 +37,10 @@ export function WalletProvider({ children }: { children: ReactNode }) {
   const connect = useCallback(async () => {
     setConnecting(true);
     try {
-      const addr = await wallet.connect();
+      const { address: addr, walletId } = await wallet.connect();
       setAddress(addr);
       localStorage.setItem(STORAGE_KEY, addr);
+      localStorage.setItem(WALLET_ID_KEY, walletId);
     } finally {
       setConnecting(false);
     }
@@ -49,12 +51,18 @@ export function WalletProvider({ children }: { children: ReactNode }) {
     setAddress(null);
     setBalance(null);
     localStorage.removeItem(STORAGE_KEY);
+    localStorage.removeItem(WALLET_ID_KEY);
   }, []);
 
-  // Restore a previously connected address (best-effort).
+  // Restore a previously connected address (best-effort). The saved wallet id
+  // must be re-selected on the kit, otherwise it silently falls back to the
+  // default (Freighter) and signs with the wrong wallet.
   useEffect(() => {
     const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved) setAddress(saved);
+    if (!saved) return;
+    const savedId = localStorage.getItem(WALLET_ID_KEY);
+    if (savedId) wallet.selectWallet(savedId);
+    setAddress(saved);
   }, []);
 
   useEffect(() => {

@@ -123,6 +123,29 @@ fn contribute_after_deadline_fails() {
 }
 
 #[test]
+fn overfunding_beyond_gap_rejected() {
+    let s = setup(1_000, &[1_000]);
+    let alice = funder(&s, 700);
+    s.client.contribute(&alice, &700);
+    assert_eq!(s.client.get_info().total_raised, 700);
+
+    // Remaining gap is 300; a 500 contribution would push total past the goal.
+    let bob = funder(&s, 500);
+    assert_eq!(
+        s.client.try_contribute(&bob, &500),
+        Err(Ok(Error::ExceedsGoal))
+    );
+    // The escrow is untouched by the rejected contribution.
+    assert_eq!(s.token.balance(&s.client.address), 700);
+
+    // Filling exactly to the goal succeeds.
+    let carol = funder(&s, 300);
+    s.client.contribute(&carol, &300);
+    assert_eq!(s.client.get_info().total_raised, 1_000);
+    assert_eq!(s.token.balance(&s.client.address), 1_000);
+}
+
+#[test]
 fn zero_amount_rejected() {
     let s = setup(1_000, &[1_000]);
     let alice = funder(&s, 500);
@@ -208,7 +231,9 @@ fn constructor_rejects_empty_milestones() {
 #[test]
 fn invariant_escrow_equals_contributions() {
     let goal = 10_000i128;
-    for raised in [0i128, 1, 5_000, 9_999, 10_000, 15_000] {
+    // Overfunding is now rejected, so `raised` never exceeds `goal`; the
+    // goal-exact case (10_000) covers the Successful boundary.
+    for raised in [0i128, 1, 5_000, 9_999, 10_000] {
         let s = setup(goal, &[goal]);
         if raised > 0 {
             let a = funder(&s, raised);
